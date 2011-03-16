@@ -6,19 +6,27 @@
 (function($) {
 	var name_space = 'mobile_carousel';
 
-	$.fn[name_space] = function() {
+	$.fn[name_space] = function(carouselOptions) {
 		if (this.data("__attached") === "true") {
 			return;
 		}
-
+		
 		// change style
 		this.addClass("ui-mobile-carousel");
 
-		var carousel_padding = 10;
+		var carousel_padding = ('padding' in carouselOptions) ? carouselOptions.padding : 10;
 		var window_width  = $(window).width();
 		var window_height = $(window).height();
-		var margin_width  = Math.abs(window_width / 3);
-		var content_width = window_width - margin_width;
+		var carousel_width  = ('width' in carouselOptions) ? carouselOptions.width : window_width;
+		var carousel_height = ('height' in carouselOptions) ? carouselOptions.height : carousel_height;
+		
+		var paging_left  = ('pagingLeft' in carouselOptions) ? carouselOptions.pagingLeft : "&lt;";
+		var paging_right = ('pagingRight' in carouselOptions) ? carouselOptions.pagingRight : "&gt;";
+		var paging_bullet  = ('pagingBullet' in carouselOptions) ? carouselOptions.pagingBullet : "&ordm;";
+		var paging_current = ('pagingCurrent' in carouselOptions) ? carouselOptions.pagingCurrent : "&bull;";
+		
+		var margin_width  = ('marginWidth' in carouselOptions) ? carouselOptions.marginWidth : Math.abs(window_width / 3);
+		var content_width = ('contentWidth' in carouselOptions) ? carouselOptions.contentWidth : window_width - margin_width;
 		var left_base     = -15 + (margin_width / 2);
 
 		this.each(function(){
@@ -33,7 +41,7 @@
 			ul.appendTo(content);
 			content.append(content_paging);
 
-			ul.height(window_height);
+			ul.height(carousel_height);
 
 			var elements = ul.find("li");
 										   
@@ -48,13 +56,13 @@
 					if (image_width < img.width()) {
 						img.width(image_width);
 					}
-					if (window_height - carousel_padding < img.height()) {
-						img.height(window_height - carousel_padding);
+					if (carousel_height - carousel_padding < img.height()) {
+						img.height(carousel_height - carousel_padding);
 					}
-					li.width(content_width).height(window_height);
+					li.width(content_width).height(carousel_height);
 
 					// fixed img position
-					li_left += window_height;
+					li_left += carousel_height;
 					var left = (li.width() / 2) - (img.width() / 2);
 					var top  = (li.height() / 2) - (img.height() / 2);
 					img.css({ left: left + "px", top: top + "px" });
@@ -90,18 +98,32 @@
 				// set page marker
 				content_paging.empty();
 				var page_width = 0;
+				
+				// paging left
+				var page = $("<SPAN/>");
+				page.html(paging_left)
+					.addClass("ui-mobile-carousel-content-paging-left");
+				content_paging.append(page);
+				page_width += page.width();
+				// paging items
 				for (var i = 1; i < elements.length + 1; i++) {
 					var page = $("<SPAN/>");
 					if (i === currentIndex) {
-						page.text("●")
+						page.html(paging_current)
 							.addClass("ui-mobile-carousel-content-paging-hide");
 					} else {
-						page.text("○")
+						page.html(paging_bullet)
 							.addClass("ui-mobile-carousel-content-paging-show");
 					}
 					content_paging.append(page);
 					page_width += page.width();
 				}
+				// paging right
+				var page = $("<SPAN/>");
+				page.html(paging_right)
+					.addClass("ui-mobile-carousel-content-paging-right");
+				content_paging.append(page);
+				page_width += page.width();
 
 				// fixed position
 				content_paging.width(page_width);
@@ -216,8 +238,9 @@
 				}
 				*/
 				lastMoveAt = now;
-
-				$.mobile.silentScroll(ul.offset().top);
+				
+				var scroll_to_top = ('scrollToTop' in carouselOptions) ? carouselOptions.scrollToTop : true;
+				if(scroll_to_top === true) $.mobile.silentScroll(ul.offset().top);
 
 				lastX = startX - data.pageX;
 				var currentX = lastCurrentX = (content_width * (currentIndex - 1)) + lastX;
